@@ -1,0 +1,75 @@
+{
+  "_comment": "FROZEN fixtures for the Content Engine Self-Harness. Each fixture is a set of insights (the same shape as m1_insights.insights rows) the report writer must ground its report in. Synthetic until the production DB is reachable; add real frozen sets alongside these and never edit a fixture in place (append new ones, bump the file).",
+  "in_sample": [
+    {
+      "name": "influence_developer",
+      "insights": [
+        {
+          "insight_id": "INS_INFLUENCE_aaa111",
+          "lens": "influence",
+          "title": "Recurring actor: Catalyst Land Holdings LLC",
+          "summary": "Catalyst Land Holdings LLC (Organization) appears across 18 distinct records with 41 recorded observations, among the most frequently referenced actors in the corpus.",
+          "severity": "high",
+          "confidence": 0.58,
+          "entity_refs": ["reg_4412"],
+          "metrics": {"record_count": 18, "observation_count": 41, "category": "ORGANIZATION"},
+          "evidence": [
+            {"kind": "observation", "ref": "fact_9001", "source_id": "RUN_2024_03", "excerpt": "rezoning request submitted by Catalyst Land Holdings for parcel 114-A"},
+            {"kind": "observation", "ref": "fact_9044", "source_id": "RUN_2025_06", "excerpt": "Catalyst Land Hollings named in water-extension agreement"}
+          ]
+        },
+        {
+          "insight_id": "INS_SPENDING_bbb222",
+          "lens": "spending",
+          "title": "$1,250,000 - Water line extension, Phase II",
+          "summary": "Agenda item references a figure of approximately $1,250,000.00 (2025-06-10). Item: Water line extension, Phase II.",
+          "severity": "high",
+          "confidence": 0.6,
+          "entity_refs": [],
+          "metrics": {"amount_usd": 1250000.0, "meeting_date": "2025-06-10"},
+          "evidence": [
+            {"kind": "agenda_item", "ref": "item_55120", "meeting_id": "MTG_2025_06_10", "meeting_date": "2025-06-10", "excerpt": "appropriation of $1,250,000 for water line extension Phase II"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "topics_thread",
+      "insights": [
+        {
+          "insight_id": "INS_TOPICS_ccc333",
+          "lens": "topics",
+          "title": "Recurring topic: Water & sewer",
+          "summary": "'Water & sewer' appears on the agenda across 47 distinct meetings spanning 2013-05-02 to 2026-04-14, marking it as a persistent thread in council activity.",
+          "severity": "high",
+          "confidence": 0.6,
+          "entity_refs": [],
+          "metrics": {"meeting_count": 47, "first_date": "2013-05-02", "last_date": "2026-04-14"},
+          "evidence": [
+            {"kind": "agenda_item", "ref": "item_22010", "meeting_id": "MTG_2013_05_02", "meeting_date": "2013-05-02", "excerpt": "discussion of sewer capacity limits"}
+          ]
+        }
+      ]
+    }
+  ],
+  "held_out": [
+    {
+      "name": "votes_dense_session",
+      "insights": [
+        {
+          "insight_id": "INS_VOTES_ddd444",
+          "lens": "votes",
+          "title": "High decision activity: meeting MTG_2024_09_12 (2024-09-12)",
+          "summary": "This session carried 31 procedural (motion/vote/amendment) turns, among the most decision-dense meetings in the transcript corpus. Disposition: OK95.",
+          "severity": "high",
+          "confidence": 0.55,
+          "entity_refs": [],
+          "metrics": {"procedural_turns": 31, "meeting_date": "2024-09-12", "disposition_code": "OK95"},
+          "evidence": [
+            {"kind": "transcript_turn", "ref": "turn_880142", "meeting_id": "MTG_2024_09_12", "meeting_date": "2024-09-12", "excerpt": "[VOTE] Mayor Hollis: motion carries four to one"}
+          ]
+        }
+      ]
+    }
+  ]
+}
