@@ -23,9 +23,12 @@ MONEY_KEYWORDS = (
 )
 # Flag individual figures at or above this dollar amount as high severity.
 HIGH_DOLLAR_THRESHOLD = float(os.getenv("CC_SPENDING_HIGH_THRESHOLD", "100000"))
-TOP_N = int(os.getenv("CC_SPENDING_TOP_N", "20"))
+TOP_N = int(os.getenv("CC_SPENDING_TOP_N", "25"))
+# Floor out routine pennies/fees (tax refunds of $56.73, etc.) — keep substantive items.
+MIN_AMOUNT = float(os.getenv("CC_SPENDING_MIN_AMOUNT", "5000"))
 
 DOLLAR_RE = re.compile(r"\$\s?([0-9][0-9,]*(?:\.[0-9]{2})?)")
+SENTENCE_RE = re.compile(r"(?<=[.;:!?])\s+")
 
 # COALESCE across the agenda item text columns observed in the schema, so the
 # lens works whether the loader populated `content`, `item_text`, or only title.
@@ -59,15 +62,27 @@ WHERE e.content ILIKE ANY(%(patterns)s)
 """
 
 
-def _max_dollar(text: str) -> float:
-    best = 0.0
-    for match in DOLLAR_RE.finditer(text or ""):
-        try:
-            val = float(match.group(1).replace(",", ""))
-        except ValueError:
-            continue
-        best = max(best, val)
-    return best
+def _dollar_hits(text: str) -> list[tuple[float, str]]:
+    """
+    Each dollar figure tied to its LOCAL context: the sentence containing it,
+    plus the preceding sentence (often the 'who/what'). This stops a large
+    figure from being mis-attributed to unrelated text elsewhere in the excerpt.
+    Returns (amount, context) for the largest figure in each money-bearing
+    sentence.
+    """
+    sentences = SENTENCE_RE.split(re.sub(r"\s+", " ", text or "").strip())
+    hits: list[tuple[float, str]] = []
+    for i, s in enumerate(sentences):
+        best = 0.0
+        for m in DOLLAR_RE.finditer(s):
+            try:
+                best = max(best, float(m.group(1).replace(",", "")))
+            except ValueError:
+                continue
+        if best >= MIN_AMOUNT:
+            context = ((sentences[i - 1] + " ") if i > 0 else "") + s
+            hits.append((best, context.strip()))
+    return hits
 
 
 class SpendingLens(Lens):
@@ -85,17 +100,19 @@ class SpendingLens(Lens):
         except Exception:
             pass  # m1_minutes not present in this deployment
 
-        scored = []
+        # One candidate per money-bearing sentence, tied to its local context;
+        # dedupe per (meeting, amount), keeping the richest context.
+        best: dict[tuple, tuple] = {}
         for row in rows:
-            amount = _max_dollar(row["item_body"])
-            if amount <= 0:
-                continue
-            scored.append((amount, row))
+            for amount, context in _dollar_hits(row["item_body"]):
+                key = (row.get("meeting_id"), round(amount, 2))
+                prev = best.get(key)
+                if prev is None or len(context) > len(prev[1]):
+                    best[key] = (amount, context, row)
 
-        scored.sort(key=lambda t: t[0], reverse=True)
+        candidates = sorted(best.values(), key=lambda t: t[0], reverse=True)[:TOP_N]
         insights: list[Insight] = []
-
-        for amount, row in scored[:TOP_N]:
+        for amount, context, row in candidates:
             meeting_date = (
                 row["meeting_date"].isoformat()
                 if row.get("meeting_date") and hasattr(row["meeting_date"], "isoformat")
@@ -104,15 +121,14 @@ class SpendingLens(Lens):
             severity = SEVERITY_HIGH if amount >= HIGH_DOLLAR_THRESHOLD else SEVERITY_NOTABLE
             kind = row.get("kind", "agenda_item")
             where = "Minutes" if kind == "minutes_excerpt" else "Agenda item"
-            title_snip = (row["item_title"] or where).strip()[:120]
             insights.append(
                 Insight(
                     lens=self.name,
-                    title=f"${amount:,.0f} — {title_snip}",
+                    title=f"${amount:,.0f} — {context[:120]}",
                     summary=(
-                        f"{where} references a figure of approximately ${amount:,.2f}"
+                        f"{where}"
                         + (f" ({meeting_date})" if meeting_date else "")
-                        + f". Context: {title_snip}."
+                        + f" references ${amount:,.2f}. Context: {context[:400]}"
                     ),
                     severity=severity,
                     confidence=0.6,
@@ -123,7 +139,7 @@ class SpendingLens(Lens):
                             ref=str(row["ref"]),
                             meeting_id=str(row["meeting_id"]) if row.get("meeting_id") else None,
                             meeting_date=meeting_date,
-                            excerpt=(row["item_body"] or "")[:280],
+                            excerpt=context[:400],
                         )
                     ],
                     source_lane="m1_minutes.excerpts" if kind == "minutes_excerpt" else "m1_agenda.items",
