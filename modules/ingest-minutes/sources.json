@@ -1,0 +1,17 @@
+{
+  "_comment": "Real Surry County minutes PDFs (born-digital / searchable). meeting_id = SURRY_<date> to share ids with agenda + transcript lanes. Minutes carry dollar amounts and vote dispositions the agenda summaries omit.",
+  "jurisdiction": "Surry County",
+  "meeting_type": "Board of Commissioners",
+  "base_url": "https://www.co.surry.nc.us/",
+  "minutes": [
+    {"meeting_date": "2026-06-02", "path": "document_center/Commissioners/Minutes/2026/Minutes June 2, 2026.pdf"},
+    {"meeting_date": "2026-06-01", "path": "document_center/Commissioners/Minutes/2026/Minutes June 1, 2026.pdf"},
+    {"meeting_date": "2026-05-18", "path": "document_center/Commissioners/Minutes/2026/Minutes May 18, 2026.pdf"},
+    {"meeting_date": "2026-05-04", "path": "document_center/Commissioners/Minutes/2026/Minutes May 4, 2026.pdf"},
+    {"meeting_date": "2026-04-21", "path": "document_center/Commissioners/Minutes/2026/Minutes April 21, 2026.pdf"},
+    {"meeting_date": "2026-04-20", "path": "document_center/Commissioners/Minutes/2026/Minutes April 20 2026 (002).pdf"},
+    {"meeting_date": "2026-04-06", "path": "document_center/Commissioners/Minutes/2026/Minutes April 6, 2026.pdf"},
+    {"meeting_date": "2026-03-31", "path": "document_center/Commissioners/Minutes/2026/Minutes March 31, 2026.pdf"},
+    {"meeting_date": "2026-03-16", "path": "document_center/Commissioners/Minutes/2026/Minutes March 16, 2026.pdf"}
+  ]
+}

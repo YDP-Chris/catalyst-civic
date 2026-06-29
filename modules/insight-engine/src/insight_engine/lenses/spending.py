@@ -31,7 +31,8 @@ DOLLAR_RE = re.compile(r"\$\s?([0-9][0-9,]*(?:\.[0-9]{2})?)")
 # lens works whether the loader populated `content`, `item_text`, or only title.
 SCAN_SQL = """
 SELECT
-    i.item_id,
+    i.item_id                                            AS ref,
+    'agenda_item'                                        AS kind,
     i.meeting_id,
     COALESCE(i.title, i.label, '')                       AS item_title,
     COALESCE(i.content, i.item_text, i.title, i.label, '') AS item_body,
@@ -39,6 +40,22 @@ SELECT
 FROM m1_agenda.items i
 LEFT JOIN m1_agenda.meetings m ON m.meeting_id = i.meeting_id
 WHERE COALESCE(i.content, i.item_text, i.title, i.label, '') ILIKE ANY(%(patterns)s)
+"""
+
+# Minutes carry the actual dollar figures and dispositions that agenda summaries
+# omit, so the spending lens reads minutes excerpts too. Best-effort: skipped
+# cleanly if the m1_minutes schema isn't present.
+MINUTES_SQL = """
+SELECT
+    e.excerpt_id        AS ref,
+    'minutes_excerpt'   AS kind,
+    e.meeting_id,
+    left(e.content, 90) AS item_title,
+    e.content           AS item_body,
+    m.meeting_date
+FROM m1_minutes.excerpts e
+LEFT JOIN m1_minutes.meetings m ON m.meeting_id = e.meeting_id
+WHERE e.content ILIKE ANY(%(patterns)s)
 """
 
 
@@ -60,7 +77,13 @@ class SpendingLens(Lens):
     def analyze(self, cur) -> list[Insight]:
         patterns = [f"%{kw}%" for kw in MONEY_KEYWORDS]
         cur.execute(SCAN_SQL, {"patterns": patterns})
-        rows = cur.fetchall()
+        rows = list(cur.fetchall())
+        # Minutes are where the dollar figures actually live; include them if present.
+        try:
+            cur.execute(MINUTES_SQL, {"patterns": patterns})
+            rows += list(cur.fetchall())
+        except Exception:
+            pass  # m1_minutes not present in this deployment
 
         scored = []
         for row in rows:
@@ -79,29 +102,31 @@ class SpendingLens(Lens):
                 else (str(row["meeting_date"]) if row.get("meeting_date") else None)
             )
             severity = SEVERITY_HIGH if amount >= HIGH_DOLLAR_THRESHOLD else SEVERITY_NOTABLE
-            title_snip = (row["item_title"] or "Agenda item").strip()[:120]
+            kind = row.get("kind", "agenda_item")
+            where = "Minutes" if kind == "minutes_excerpt" else "Agenda item"
+            title_snip = (row["item_title"] or where).strip()[:120]
             insights.append(
                 Insight(
                     lens=self.name,
                     title=f"${amount:,.0f} — {title_snip}",
                     summary=(
-                        f"Agenda item references a figure of approximately ${amount:,.2f}"
+                        f"{where} references a figure of approximately ${amount:,.2f}"
                         + (f" ({meeting_date})" if meeting_date else "")
-                        + f". Item: {title_snip}."
+                        + f". Context: {title_snip}."
                     ),
                     severity=severity,
                     confidence=0.6,
-                    metrics={"amount_usd": amount, "meeting_date": meeting_date},
+                    metrics={"amount_usd": amount, "meeting_date": meeting_date, "source": kind},
                     evidence=[
                         Evidence(
-                            kind="agenda_item",
-                            ref=str(row["item_id"]),
+                            kind=kind,
+                            ref=str(row["ref"]),
                             meeting_id=str(row["meeting_id"]) if row.get("meeting_id") else None,
                             meeting_date=meeting_date,
                             excerpt=(row["item_body"] or "")[:280],
                         )
                     ],
-                    source_lane="m1_agenda.items",
+                    source_lane="m1_minutes.excerpts" if kind == "minutes_excerpt" else "m1_agenda.items",
                 )
             )
         return insights

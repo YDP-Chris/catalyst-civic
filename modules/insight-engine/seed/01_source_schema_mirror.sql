@@ -13,6 +13,7 @@
 
 CREATE SCHEMA IF NOT EXISTS m1_agenda;
 CREATE SCHEMA IF NOT EXISTS m1_transcript;
+CREATE SCHEMA IF NOT EXISTS m1_minutes;
 CREATE SCHEMA IF NOT EXISTS cco;
 
 -- --- Agenda lane -----------------------------------------------------------
@@ -62,6 +63,27 @@ CREATE TABLE IF NOT EXISTS m1_transcript.turns (
     phase         TEXT,
     speaker_role  TEXT,
     speaker_name  TEXT,
+    content       TEXT,
+    metadata      JSONB DEFAULT '{}'::jsonb,
+    created_at    TIMESTAMPTZ DEFAULT now()
+);
+
+-- --- Minutes lane ----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS m1_minutes.meetings (
+    meeting_id    TEXT PRIMARY KEY,
+    source_id     TEXT,
+    jurisdiction  TEXT,
+    meeting_type  TEXT,
+    meeting_date  DATE,
+    is_complete   BOOLEAN,
+    metadata      JSONB DEFAULT '{}'::jsonb,
+    created_at    TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS m1_minutes.excerpts (
+    excerpt_id    TEXT PRIMARY KEY,
+    meeting_id    TEXT REFERENCES m1_minutes.meetings(meeting_id),
+    ordinal       INTEGER,
     content       TEXT,
     metadata      JSONB DEFAULT '{}'::jsonb,
     created_at    TIMESTAMPTZ DEFAULT now()
