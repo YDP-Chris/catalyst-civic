@@ -57,7 +57,8 @@ def fetch_one(video: dict, force: bool) -> str:
         "video_id": vid,
         "source_url": f"https://www.youtube.com/watch?v={vid}",
         "jurisdiction": "Surry County",
-        "meeting_type": "Board of Commissioners",
+        "meeting_type": video.get("meeting_type", "Board of Commissioners"),
+        "title": video.get("title"),
         "meeting_date": video.get("meeting_date"),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "segment_count": len(segments),
@@ -73,6 +74,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Surry transcript ingester (fetch)")
     parser.add_argument("--video", help="Fetch a single video_id")
     parser.add_argument("--force", action="store_true", help="Re-fetch even if staged")
+    parser.add_argument("--delay", type=float, default=1.5,
+                        help="Seconds to pause between fetches (politeness / rate-limit)")
     args = parser.parse_args()
 
     sources = json.loads(SOURCES.read_text(encoding="utf-8"))
@@ -80,11 +83,24 @@ def main() -> int:
     if args.video:
         videos = [v for v in videos if v["video_id"] == args.video] or [{"video_id": args.video}]
 
-    for v in videos:
+    import time
+    staged = fetched = errors = 0
+    for i, v in enumerate(videos):
         try:
-            print(fetch_one(v, args.force))
+            msg = fetch_one(v, args.force)
+            print(f"[{i+1}/{len(videos)}] {msg}")
+            if msg.startswith("staged"):
+                fetched += 1
+                if i < len(videos) - 1:
+                    time.sleep(args.delay)  # pace only real fetches
+            else:
+                staged += 1
         except Exception as exc:
-            print(f"ERROR {v.get('video_id')}: {type(exc).__name__}: {str(exc)[:160]}")
+            errors += 1
+            print(f"[{i+1}/{len(videos)}] ERROR {v.get('video_id')}: {type(exc).__name__}: {str(exc)[:160]}")
+            if i < len(videos) - 1:
+                time.sleep(args.delay)
+    print(f"\nDONE: {fetched} fetched, {staged} already staged, {errors} errors.")
     return 0
 
 
