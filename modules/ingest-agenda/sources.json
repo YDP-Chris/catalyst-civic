@@ -1,0 +1,19 @@
+{
+  "_comment": "Real Surry County agenda PDFs (scanned). base_url + relative path per meeting. Paths are URL-encoded at download. meeting_date is used to build meeting_id = SURRY_<date> so the agenda lane shares meeting ids with the transcript lane (cross-linking spoken + documentary record). Expand by scraping the agendas portal.",
+  "jurisdiction": "Surry County",
+  "meeting_type": "Board of Commissioners",
+  "base_url": "https://www.co.surry.nc.us/",
+  "agendas": [
+    {"meeting_date": "2026-06-15", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda June 15, 2026.pdf"},
+    {"meeting_date": "2026-06-01", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda June 1, 2026.pdf"},
+    {"meeting_date": "2026-05-18", "path": "document_center/Commissioners/Agendas/2026/FINAL Agenda May 18, 2026.pdf"},
+    {"meeting_date": "2026-05-04", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda May 4, 2026.pdf"},
+    {"meeting_date": "2026-04-20", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda April 20, 2026.pdf"},
+    {"meeting_date": "2026-04-06", "path": "document_center/Commissioners/Agendas/2026/April 6, 2026 Board of Commissioners meeting agenda.pdf"},
+    {"meeting_date": "2026-03-16", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda March 16, 2026.pdf"},
+    {"meeting_date": "2026-03-02", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda March 2, 2026.pdf"},
+    {"meeting_date": "2026-02-16", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda Februrary 16, 2026.pdf"},
+    {"meeting_date": "2026-01-20", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda January 20, 2026.pdf"},
+    {"meeting_date": "2026-01-05", "path": "document_center/Commissioners/Agendas/2026/1 - Agenda January 5, 2026.pdf"}
+  ]
+}
