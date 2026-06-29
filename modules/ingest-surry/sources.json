@@ -1,0 +1,13 @@
+{
+  "_comment": "Real Surry County, NC Board of Commissioners meeting recordings (public, YouTube channel @surrycountynccommissioners). Seed list for the transcript ingester. Expand by pulling the channel's uploads playlist. Dates are the meeting dates from the video titles.",
+  "channel": "https://www.youtube.com/@surrycountynccommissioners",
+  "jurisdiction": "Surry County",
+  "meeting_type": "Board of Commissioners",
+  "videos": [
+    {"video_id": "FRNjggFp0_M", "meeting_date": "2025-03-17"},
+    {"video_id": "1A1XhbB7J-w", "meeting_date": "2025-02-17"},
+    {"video_id": "yGOpYPTiZPw", "meeting_date": "2025-04-07"},
+    {"video_id": "2Ek6tVeO5pg", "meeting_date": "2024-11-04"},
+    {"video_id": "8S0_Hp5pjWQ", "meeting_date": "2022-03-21"}
+  ]
+}
